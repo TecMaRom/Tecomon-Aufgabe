@@ -2,12 +2,14 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import connectDB from "./services/db";
+import widgetRoutes from "./routes/widgets";
 
 const app = express();
 const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
+app.use("/widgets", widgetRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({
