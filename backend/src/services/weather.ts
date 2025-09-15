@@ -1,4 +1,5 @@
 import axios from "axios";
+import weatherCache from "../cache/weatherCache";
 
 export interface WeatherData {
   location: string;
@@ -26,6 +27,11 @@ class WeatherService {
   private baseURL = "https://api.open-meteo.com/v1";
 
   async getWeatherData(location: string): Promise<WeatherData> {
+    const cachedData = weatherCache.get(location);
+    if (cachedData) {
+      return cachedData;
+    }
+
     try {
       const geoResponse = await axios.get<GeocodingResponse>(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
@@ -58,6 +64,8 @@ class WeatherService {
         description,
         cachedAt: new Date(),
       };
+
+      weatherCache.set(location, weatherData);
 
       return weatherData;
     } catch (error) {
