@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import Widget from "../models/Widget";
 import { Types } from "mongoose";
+import weatherService from "../services/weather";
 
 const router = express.Router();
 
@@ -50,6 +51,28 @@ router.delete("/:id", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deleting widget:", error);
     res.status(500).json({ error: "Failed to delete widget" });
+  }
+});
+
+router.get("/:id/weather", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || !Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid widget ID" });
+    }
+
+    const widget = await Widget.findById(id);
+
+    if (!widget) {
+      return res.status(404).json({ error: "Widget not found" });
+    }
+
+    const weatherData = await weatherService.getWeatherData(widget.location);
+    res.json(weatherData);
+  } catch (error) {
+    console.error("Error fetching weather:", error);
+    res.status(500).json({ error: "Failed to fetch weather data" });
   }
 });
 
