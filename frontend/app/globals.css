@@ -5,6 +5,7 @@ body {
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  line-height: 1.6;
 }
 
 a {
@@ -18,8 +19,78 @@ a {
 
 main {
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 3rem;
 }
 
 h1 {
-  margin-bottom: 1rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: left;
+}
+
+.subtitle {
+  margin: 0 0 0 0;
+  font-size: 1rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+h2 {
+  margin: 3rem 0 1.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  main {
+    padding: 1.5rem;
+  }
+
+  .header {
+    margin-bottom: 2.5rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  h2 {
+    margin: 2.5rem 0 1rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    padding: 1rem;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    margin: 2rem 0 1rem 0;
+  }
 }
