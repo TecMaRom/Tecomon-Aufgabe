@@ -40,12 +40,18 @@ export const createWidget = async (
   }
 };
 
-export const deleteWidget = async (id: string): Promise<void> => {
+export interface DeleteWidgetResponse {
+  message: string;
+}
+
+export const deleteWidget = async (
+  id: string
+): Promise<DeleteWidgetResponse> => {
   try {
     const response = await fetch(`${API_BASE_URL}/widgets/${id}`, {
       method: "DELETE",
     });
-    await handleApiResponse(response);
+    return await handleApiResponse(response);
   } catch (error) {
     console.error("Error deleting widget:", error);
     throw error;
