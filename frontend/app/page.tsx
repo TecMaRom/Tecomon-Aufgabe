@@ -14,6 +14,12 @@ export default function Dashboard() {
     setWidgets((prevWidgets) => [newWidget, ...prevWidgets]);
   };
 
+  const handleWidgetDeleted = (deletedId: string) => {
+    setWidgets((prevWidgets) =>
+      prevWidgets.filter((widget) => widget._id !== deletedId)
+    );
+  };
+
   return (
     <main>
       <div className="header">
@@ -25,7 +31,7 @@ export default function Dashboard() {
 
       <div>
         <h2>Your Weather Widgets</h2>
-        <WidgetGrid widgets={widgets} />
+        <WidgetGrid widgets={widgets} onWidgetDeleted={handleWidgetDeleted} />
       </div>
     </main>
   );

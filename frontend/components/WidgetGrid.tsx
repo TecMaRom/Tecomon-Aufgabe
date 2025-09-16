@@ -10,9 +10,13 @@ interface Widget {
 
 interface WidgetGridProps {
   widgets: Widget[];
+  onWidgetDeleted: (id: string) => void;
 }
 
-export default function WidgetGrid({ widgets }: WidgetGridProps) {
+export default function WidgetGrid({
+  widgets,
+  onWidgetDeleted,
+}: WidgetGridProps) {
   if (widgets.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -28,6 +32,7 @@ export default function WidgetGrid({ widgets }: WidgetGridProps) {
           key={widget._id}
           id={widget._id}
           location={widget.location}
+          onWidgetDeleted={onWidgetDeleted}
         />
       ))}
     </div>

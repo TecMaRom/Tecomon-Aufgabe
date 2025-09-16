@@ -35,14 +35,20 @@
   font-size: 0.75rem;
   font-weight: 500;
   transition: background-color 0.2s;
+  min-width: 70px;
 }
 
-.deleteButton:hover {
+.deleteButton:hover:not(:disabled) {
   background-color: #b91c1c;
 }
 
-.deleteButton:active {
+.deleteButton:active:not(:disabled) {
   background-color: #991b1b;
+}
+
+.deleteButton:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .content {
