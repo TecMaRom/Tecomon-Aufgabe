@@ -32,7 +32,7 @@ npm run dev
 `backend/.env` must define at least:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/widgets
+MONGODB_URI=mongodb://localhost:27017/widgets
 PORT=5000
 ```
 
