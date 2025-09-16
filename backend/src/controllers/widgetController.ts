@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Widget from "../models/Widget";
 import { Types } from "mongoose";
 import weatherService from "../services/weather";
+import weatherCache from "../cache/weatherCache";
 import { validateLocation, createErrorResponse } from "../utils/validation";
 
 export const getAllWidgets = async (req: Request, res: Response) => {
@@ -23,8 +24,49 @@ export const createWidget = async (req: Request, res: Response) => {
       return res.status(400).json(createErrorResponse(validationError, 400));
     }
 
-    const widget = new Widget({ location: location.trim() });
+    const normalizedLocation = location.trim();
+    const locationKey = normalizedLocation.toLowerCase();
+
+    const existingWidget = await Widget.findOne({ locationKey });
+
+    if (existingWidget) {
+      const cachedWeather = weatherCache.get(existingWidget.location);
+
+      if (cachedWeather) {
+        return res
+          .status(409)
+          .json(createErrorResponse("Widget already exists", 409));
+      }
+
+      try {
+        await weatherService.getWeatherData(existingWidget.location);
+      } catch (error) {
+        console.error("Error refreshing weather:", error);
+        return res
+          .status(500)
+          .json(createErrorResponse("Failed to refresh weather data", 500));
+      }
+
+      return res.status(409).json(
+        createErrorResponse("Widget already exists; weather refreshed", 409)
+      );
+    }
+
+    const widget = new Widget({
+      location: normalizedLocation,
+      locationKey,
+    });
     const savedWidget = await widget.save();
+
+    const cachedWeather = weatherCache.get(savedWidget.location);
+
+    if (!cachedWeather) {
+      try {
+        await weatherService.getWeatherData(savedWidget.location);
+      } catch (error) {
+        console.error("Error preloading weather:", error);
+      }
+    }
 
     res.status(201).json(savedWidget);
   } catch (error) {

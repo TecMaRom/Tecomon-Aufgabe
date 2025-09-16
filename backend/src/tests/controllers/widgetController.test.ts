@@ -5,10 +5,30 @@ import {
   deleteWidget,
 } from "../../controllers/widgetController";
 import Widget from "../../models/Widget";
+import weatherCache from "../../cache/weatherCache";
+import weatherService from "../../services/weather";
 import { Types } from "mongoose";
 
 jest.mock("../../models/Widget");
+jest.mock("../../cache/weatherCache", () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    set: jest.fn(),
+  },
+}));
+jest.mock("../../services/weather", () => ({
+  __esModule: true,
+  default: {
+    getWeatherData: jest.fn(),
+  },
+}));
+
 const MockedWidget = Widget as jest.Mocked<typeof Widget>;
+const mockedCache = weatherCache as jest.Mocked<typeof weatherCache>;
+const mockedWeatherService = weatherService as jest.Mocked<
+  typeof weatherService
+>;
 
 describe("WidgetController", () => {
   let mockRequest: Partial<Request>;
@@ -21,6 +41,9 @@ describe("WidgetController", () => {
       status: jest.fn().mockReturnThis(),
     };
     jest.clearAllMocks();
+    mockedCache.get.mockReset();
+    mockedCache.set.mockReset();
+    mockedWeatherService.getWeatherData.mockReset();
   });
 
   describe("createWidget", () => {
@@ -28,16 +51,23 @@ describe("WidgetController", () => {
       const savedWidget = {
         _id: "123",
         location: "Berlin",
+        locationKey: "berlin",
         createdAt: new Date(),
       };
 
       mockRequest.body = { location: "Berlin" };
+      MockedWidget.findOne = jest.fn().mockResolvedValue(null as any);
       MockedWidget.prototype.save = jest.fn().mockResolvedValue(savedWidget);
+      mockedCache.get.mockReturnValueOnce(null);
+      mockedWeatherService.getWeatherData.mockResolvedValueOnce({} as any);
 
       await createWidget(mockRequest as Request, mockResponse as Response);
 
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(savedWidget);
+      expect(MockedWidget.findOne).toHaveBeenCalledWith({ locationKey: "berlin" });
+      expect(mockedCache.get).toHaveBeenCalledWith("Berlin");
+      expect(mockedWeatherService.getWeatherData).toHaveBeenCalledWith("Berlin");
     });
 
     it("should return error for missing location", async () => {
@@ -49,6 +79,49 @@ describe("WidgetController", () => {
       expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: "Location is required and must be a string",
+        })
+      );
+    });
+
+    it("should reject duplicate widget when cache is fresh", async () => {
+      const existingWidget = {
+        _id: "123",
+        location: "Berlin",
+        locationKey: "berlin",
+      };
+
+      mockRequest.body = { location: "Berlin" };
+      MockedWidget.findOne = jest.fn().mockResolvedValue(existingWidget as any);
+      mockedCache.get.mockReturnValueOnce({} as any);
+
+      await createWidget(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(409);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: "Widget already exists" })
+      );
+      expect(mockedWeatherService.getWeatherData).not.toHaveBeenCalled();
+    });
+
+    it("should refresh weather when duplicate cache is stale", async () => {
+      const existingWidget = {
+        _id: "123",
+        location: "Berlin",
+        locationKey: "berlin",
+      };
+
+      mockRequest.body = { location: "Berlin" };
+      MockedWidget.findOne = jest.fn().mockResolvedValue(existingWidget as any);
+      mockedCache.get.mockReturnValueOnce(null);
+      mockedWeatherService.getWeatherData.mockResolvedValueOnce({} as any);
+
+      await createWidget(mockRequest as Request, mockResponse as Response);
+
+      expect(mockedWeatherService.getWeatherData).toHaveBeenCalledWith("Berlin");
+      expect(mockResponse.status).toHaveBeenCalledWith(409);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: "Widget already exists; weather refreshed",
         })
       );
     });
