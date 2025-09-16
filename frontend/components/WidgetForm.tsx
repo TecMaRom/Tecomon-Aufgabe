@@ -6,12 +6,18 @@ import styles from "./WidgetForm.module.css";
 
 interface WidgetFormProps {
   onWidgetCreated: (widget: Widget) => void;
+  onWidgetRefreshed?: (location: string) => void;
 }
 
-export default function WidgetForm({ onWidgetCreated }: WidgetFormProps) {
+export default function WidgetForm({
+  onWidgetCreated,
+  onWidgetRefreshed,
+}: WidgetFormProps) {
   const [location, setLocation] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isRefreshMessage =
+    error?.toLowerCase().includes("weather refreshed") ?? false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +36,17 @@ export default function WidgetForm({ onWidgetCreated }: WidgetFormProps) {
       onWidgetCreated(newWidget);
       setLocation("");
     } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to create widget"
-      );
+      const message =
+        error instanceof Error ? error.message : "Failed to create widget";
+
+      if (
+        onWidgetRefreshed &&
+        message.toLowerCase().includes("weather refreshed")
+      ) {
+        onWidgetRefreshed(trimmedLocation);
+      }
+
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -59,12 +73,14 @@ export default function WidgetForm({ onWidgetCreated }: WidgetFormProps) {
         </div>
 
         {error && (
-          <div className={styles.error}>
+          <div className={isRefreshMessage ? styles.success : styles.error}>
             <span>{error}</span>
             <button
               type="button"
               onClick={() => setError(null)}
-              className={styles.errorClose}
+              className={
+                isRefreshMessage ? styles.successClose : styles.errorClose
+              }
             >
               ×
             </button>

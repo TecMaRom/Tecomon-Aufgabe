@@ -9,6 +9,9 @@ export default function Dashboard() {
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTokens, setRefreshTokens] = useState<Record<string, number>>(
+    {}
+  );
 
   useEffect(() => {
     const loadWidgets = async () => {
@@ -35,6 +38,26 @@ export default function Dashboard() {
     setWidgets((prevWidgets) =>
       prevWidgets.filter((widget) => widget._id !== deletedId)
     );
+    setRefreshTokens((prev) => {
+      const updated = { ...prev };
+      delete updated[deletedId];
+      return updated;
+    });
+  };
+
+  const handleWidgetRefreshed = (location: string) => {
+    const match = widgets.find(
+      (widget) => widget.location.toLowerCase() === location.toLowerCase()
+    );
+
+    if (!match) {
+      return;
+    }
+
+    setRefreshTokens((prev) => ({
+      ...prev,
+      [match._id]: (prev[match._id] || 0) + 1,
+    }));
   };
 
   if (isLoading) {
@@ -66,11 +89,18 @@ export default function Dashboard() {
         <p className="subtitle">Frontend dashboard for weather widgets</p>
       </div>
 
-      <WidgetForm onWidgetCreated={handleWidgetCreated} />
+      <WidgetForm
+        onWidgetCreated={handleWidgetCreated}
+        onWidgetRefreshed={handleWidgetRefreshed}
+      />
 
       <div>
         <h2>Your Weather Widgets</h2>
-        <WidgetGrid widgets={widgets} onWidgetDeleted={handleWidgetDeleted} />
+        <WidgetGrid
+          widgets={widgets}
+          onWidgetDeleted={handleWidgetDeleted}
+          refreshTokens={refreshTokens}
+        />
       </div>
     </main>
   );

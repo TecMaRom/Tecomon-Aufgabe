@@ -6,11 +6,13 @@ import styles from "./WidgetGrid.module.css";
 interface WidgetGridProps {
   widgets: Widget[];
   onWidgetDeleted: (id: string) => void;
+  refreshTokens: Record<string, number>;
 }
 
 export default function WidgetGrid({
   widgets,
   onWidgetDeleted,
+  refreshTokens,
 }: WidgetGridProps) {
   if (widgets.length === 0) {
     return (
@@ -27,6 +29,7 @@ export default function WidgetGrid({
           key={widget._id}
           id={widget._id}
           location={widget.location}
+          refreshToken={refreshTokens[widget._id] || 0}
           onWidgetDeleted={onWidgetDeleted}
         />
       ))}

@@ -8,12 +8,14 @@ interface WeatherWidgetProps {
   id: string;
   location: string;
   onWidgetDeleted: (id: string) => void;
+  refreshToken: number;
 }
 
 export default function WeatherWidget({
   id,
   location,
   onWidgetDeleted,
+  refreshToken,
 }: WeatherWidgetProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -37,7 +39,7 @@ export default function WeatherWidget({
     };
 
     fetchWeather();
-  }, [id]);
+  }, [id, refreshToken]);
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
@@ -59,21 +61,31 @@ export default function WeatherWidget({
   };
 
   const formatLastUpdated = (cachedAt: string) => {
-    const now = new Date();
     const cached = new Date(cachedAt);
-    const diffMinutes = Math.floor(
-      (now.getTime() - cached.getTime()) / (1000 * 60)
-    );
 
-    if (diffMinutes < 1) return "just now";
-    if (diffMinutes === 1) return "1 minute ago";
-    return `${diffMinutes} minutes ago`;
+    if (Number.isNaN(cached.getTime())) {
+      return "unknown";
+    }
+
+    return cached.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
+
+  const formatLocation = (value: string) =>
+    value.replace(/\b\w+/g, (word) => {
+      const lower = word.toLowerCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    });
 
   return (
     <div className={styles.widget}>
       <div className={styles.header}>
-        <h4 className={styles.title}>{location}</h4>
+        <h4 className={styles.title}>{formatLocation(location)}</h4>
         <button
           className={styles.deleteButton}
           onClick={handleDelete}
