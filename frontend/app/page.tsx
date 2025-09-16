@@ -1,14 +1,31 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import WidgetForm from "@/components/WidgetForm";
 import WidgetGrid from "@/components/WidgetGrid";
 import { Widget } from "@/utils/types";
+import { getWidgets } from "@/utils/api";
 
 export default function Dashboard() {
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { _id: "1", location: "Berlin", createdAt: "2024-01-01T00:00:00.000Z" },
-    { _id: "2", location: "Paris", createdAt: "2024-01-01T00:00:00.000Z" },
-  ]);
+  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadWidgets = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedWidgets = await getWidgets();
+        setWidgets(fetchedWidgets);
+      } catch (error) {
+        console.error("Error loading widgets:", error);
+        setError("Failed to load widgets");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadWidgets();
+  }, []);
 
   const handleWidgetCreated = (newWidget: Widget) => {
     setWidgets((prevWidgets) => [newWidget, ...prevWidgets]);
@@ -19,6 +36,28 @@ export default function Dashboard() {
       prevWidgets.filter((widget) => widget._id !== deletedId)
     );
   };
+
+  if (isLoading) {
+    return (
+      <main>
+        <div className="header">
+          <h1>Weather Widgets Dashboard</h1>
+          <p className="subtitle">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main>
+        <div className="header">
+          <h1>Weather Widgets Dashboard</h1>
+          <p className="subtitle">Error: {error}</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>

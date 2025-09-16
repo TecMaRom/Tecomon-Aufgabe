@@ -1,12 +1,7 @@
 "use client";
 import WeatherWidget from "./WeatherWidget";
+import { Widget } from "@/utils/types";
 import styles from "./WidgetGrid.module.css";
-
-interface Widget {
-  _id: string;
-  location: string;
-  createdAt: string;
-}
 
 interface WidgetGridProps {
   widgets: Widget[];
