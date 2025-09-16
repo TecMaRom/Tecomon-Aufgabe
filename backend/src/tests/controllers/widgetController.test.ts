@@ -125,6 +125,24 @@ describe("WidgetController", () => {
         })
       );
     });
+
+    it("should reject new widget when weather data cannot be fetched", async () => {
+      mockRequest.body = { location: "Unknown" };
+      MockedWidget.findOne = jest.fn().mockResolvedValue(null as any);
+      MockedWidget.prototype.save = jest.fn();
+      mockedCache.get.mockReturnValueOnce(null);
+      mockedWeatherService.getWeatherData.mockRejectedValueOnce(
+        new Error('Location "Unknown" not found')
+      );
+
+      await createWidget(mockRequest as Request, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Location "Unknown" not found' })
+      );
+      expect(MockedWidget.prototype.save).not.toHaveBeenCalled();
+    });
   });
 
   describe("getAllWidgets", () => {

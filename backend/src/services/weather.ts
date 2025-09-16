@@ -70,6 +70,11 @@ class WeatherService {
       return weatherData;
     } catch (error) {
       console.error("Weather API error:", error);
+
+      if (error instanceof Error && error.message.includes("not found")) {
+        throw error;
+      }
+
       throw new Error(`Failed to fetch weather data for ${location}`);
     }
   }

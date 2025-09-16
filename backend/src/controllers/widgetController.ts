@@ -52,21 +52,28 @@ export const createWidget = async (req: Request, res: Response) => {
       );
     }
 
+    const cachedWeather = weatherCache.get(normalizedLocation);
+
+    if (!cachedWeather) {
+      try {
+        await weatherService.getWeatherData(normalizedLocation);
+      } catch (error) {
+        console.error("Error validating weather:", error);
+
+        const message =
+          error instanceof Error ? error.message : "Failed to fetch weather data";
+        const status =
+          error instanceof Error && error.message.includes("not found") ? 404 : 500;
+
+        return res.status(status).json(createErrorResponse(message, status));
+      }
+    }
+
     const widget = new Widget({
       location: normalizedLocation,
       locationKey,
     });
     const savedWidget = await widget.save();
-
-    const cachedWeather = weatherCache.get(savedWidget.location);
-
-    if (!cachedWeather) {
-      try {
-        await weatherService.getWeatherData(savedWidget.location);
-      } catch (error) {
-        console.error("Error preloading weather:", error);
-      }
-    }
 
     res.status(201).json(savedWidget);
   } catch (error) {
